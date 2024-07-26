@@ -1,4 +1,4 @@
-package fr.esgi.al.funprog
+package fr.esgi.al.funprog.direction
 
 import fr.esgi.al.funprog.models.Point
 
