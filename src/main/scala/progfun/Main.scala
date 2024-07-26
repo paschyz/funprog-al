@@ -140,6 +140,23 @@ def Main(): Unit = {
     """
   }
 
+  def saveToCsv(
+      lawnLimit: LawnLimit,
+      mowers: List[Mower],
+      finalStates: List[MowerState]
+  ): String = {
+    val header =
+      "numéro;début_x;début_y;début_direction;fin_x;fin_y;fin_direction;instructions\n"
+    val csvContent = mowers
+      .zip(finalStates)
+      .zipWithIndex
+      .map { case ((mower, state), index) =>
+        s"${index + 1};${mower.start.x};${mower.start.y};${mower.direction};${state.position.x};${state.position.y};${state.direction};${mower.instructions.mkString}"
+      }
+      .mkString("\n")
+    header + csvContent
+  }
+
   val config = ConfigReader.readConfig()
 
   val lawnLimit = LawnLimit(5, 5)
@@ -171,4 +188,10 @@ def Main(): Unit = {
   yamlFileWriter.write(yaml)
   yamlFileWriter.close()
   println(s"YAML output written to ${config.yamlPath}")
+
+  val csv = saveToCsv(lawnLimit, mowers, finalStates)
+  val csvFileWriter = new FileWriter(new File(config.csvPath))
+  csvFileWriter.write(csv)
+  csvFileWriter.close()
+  println(s"CSV output written to ${config.csvPath}")
 }
