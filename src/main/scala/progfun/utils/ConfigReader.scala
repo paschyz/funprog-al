@@ -1,25 +1,30 @@
-import scala.util.{Success, Try}
+package fr.esgi.al.funprog.utils
+
+import scala.io.Source
+import upickle.default._
 
 final case class Config(
-    inputFile: String,
-    outputJsonFile: String,
-    outputCsvFile: String,
-    outputYamlFile: String
+    inputPath: String,
+    jsonPath: String,
+    csvPath: String,
+    yamlPath: String
 )
 
 object ConfigReader {
-  // NOTE: ON RETOURNE UNE CONFIG PAR DEFAUT PCQ ON NE PEUT PAS THROW ?????
-  private val defaultConfig = Config(
-    inputFile = "/tmp/input.txt",
-    outputJsonFile = "/tmp/output.json",
-    outputCsvFile = "/tmp/output.csv",
-    outputYamlFile = "/tmp/output.yaml"
-  )
+  private val configFilePath = "config.json"
 
-  def readConfig(configPath: String): Try[Config] = {
-    println(
-      s"Returning default configuration instead of reading from $configPath"
-    )
-    Success(defaultConfig)
+  implicit val configReader: Reader[Config] = macroRW[Config]
+
+  def getOutputFilePathYAML(): String = {
+    val confFile = readConfig()
+    confFile.yamlPath
+  }
+
+  def readConfig(): Config = {
+    val source = Source.fromFile(configFilePath)(scala.io.Codec.UTF8)
+    val fileContent =
+      try source.mkString
+      finally source.close()
+    read[Config](fileContent)
   }
 }

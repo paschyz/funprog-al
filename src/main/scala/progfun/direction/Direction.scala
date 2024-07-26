@@ -8,13 +8,13 @@ object Direction {
   def turnLeft(current: Char): Char = {
     val index = directions.indexOf(current)
     val newIndex = (index - 1 + directions.length) % directions.length
-    directions.lift(newIndex).getOrElse(current) // Handle unexpected direction
+    directions.lift(newIndex).getOrElse(current)
   }
 
   def turnRight(current: Char): Char = {
     val index = directions.indexOf(current)
     val newIndex = (index + 1) % directions.length
-    directions.lift(newIndex).getOrElse(current) // Handle unexpected direction
+    directions.lift(newIndex).getOrElse(current)
   }
 
   def moveForward(point: Point, direction: Char): Point = {
@@ -23,7 +23,7 @@ object Direction {
       case 'E' => Point(point.x + 1, point.y)
       case 'S' => Point(point.x, point.y - 1)
       case 'W' => Point(point.x - 1, point.y)
-      case _   => point // Handle unexpected direction
+      case _   => point
     }
   }
 }

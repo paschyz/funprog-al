@@ -2,6 +2,7 @@ package fr.esgi.al.funprog
 
 import fr.esgi.al.funprog.direction.Direction
 import fr.esgi.al.funprog.models._
+import fr.esgi.al.funprog.utils.ConfigReader
 import scala.annotation.tailrec
 import java.io.{File, FileWriter}
 
@@ -139,6 +140,8 @@ def Main(): Unit = {
     """
   }
 
+  val config = ConfigReader.readConfig()
+
   val lawnLimit = LawnLimit(5, 5)
   val mowers = List(
     Mower(Point(1, 2), 'N', List('G', 'A', 'G', 'A', 'G', 'A', 'G', 'A', 'A')),
@@ -149,23 +152,23 @@ def Main(): Unit = {
     )
   )
 
-  val end = mowers.map(processInstructions(_, lawnLimit))
+  val finalStates = mowers.map(processInstructions(_, lawnLimit))
 
-  end.foreach { state =>
+  finalStates.foreach { state =>
     println(
       s"Final position: (${state.position.x}, ${state.position.y}), Direction: ${state.direction}"
     )
   }
 
   val json = saveToJson(lawnLimit, mowers, finalStates)
-  val jsonFileWriter = new FileWriter(new File("/tmp/output.json"))
+  val jsonFileWriter = new FileWriter(new File(config.jsonPath))
   jsonFileWriter.write(json)
   jsonFileWriter.close()
-  println(s"JSON output written to /tmp/output.json")
+  println(s"JSON output written to ${config.jsonPath}")
 
   val yaml = saveToYaml(lawnLimit, mowers, finalStates)
-  val yamlFileWriter = new FileWriter(new File("/tmp/output.yaml"))
+  val yamlFileWriter = new FileWriter(new File(config.yamlPath))
   yamlFileWriter.write(yaml)
   yamlFileWriter.close()
-  println(s"YAML output written to /tmp/output.yaml")
+  println(s"YAML output written to ${config.yamlPath}")
 }
