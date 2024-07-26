@@ -6,10 +6,7 @@ import fr.esgi.al.funprog.filewriter.FileWrite
 import fr.esgi.al.funprog.utils.ConfigReader
 import java.io.{File, FileWriter}
 
-@main
-def Main(): Unit = {
-  val config = ConfigReader.readConfig()
-
+def parseInput(): (LawnLimit, List[Mower]) = {
   val lawnLimit = LawnLimit(5, 5)
   val mowers = List(
     Mower(Point(1, 2), 'N', List('G', 'A', 'G', 'A', 'G', 'A', 'G', 'A', 'A')),
@@ -19,6 +16,15 @@ def Main(): Unit = {
       List('A', 'A', 'D', 'A', 'A', 'D', 'A', 'D', 'D', 'A')
     )
   )
+
+  (lawnLimit, mowers)
+}
+
+@main
+def Main(): Unit = {
+  val config = ConfigReader.readConfig()
+
+  val (lawnLimit, mowers) = parseInput()
 
   val finalStates = mowers.map(Instruction.processInstructions(_, lawnLimit))
 
