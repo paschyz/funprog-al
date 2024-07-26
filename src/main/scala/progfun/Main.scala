@@ -1,44 +1,13 @@
 package fr.esgi.al.funprog
 
-import fr.esgi.al.funprog.direction.Direction
-import fr.esgi.al.funprog.models.*
-import utils.{ConfigReader, InputHandler}
-
+import fr.esgi.al.funprog.instruction.Instruction
+import fr.esgi.al.funprog.models._
+import fr.esgi.al.funprog.utils.ConfigReader
 import scala.annotation.tailrec
-import scala.util.{Failure, Success, Try}
 import java.io.{File, FileWriter}
-
-import fr.esgi.al.funprog.utils._
 
 @main
 def Main(): Unit = {
-  def processInstructions(mower: Mower, lawnLimit: LawnLimit): MowerState = {
-    def executeInstruction(state: MowerState, instruction: Char): MowerState = {
-      instruction match {
-        case 'A' =>
-          val newPosition =
-            Direction.moveForward(state.position, state.direction)
-          if (
-            newPosition.x < 0 || newPosition.x > lawnLimit.xMax || newPosition.y < 0 || newPosition.y > lawnLimit.yMax
-          ) {
-            state
-          } else {
-            MowerState(newPosition, state.direction)
-          }
-        case 'D' =>
-          MowerState(state.position, Direction.turnRight(state.direction))
-        case 'G' =>
-          MowerState(state.position, Direction.turnLeft(state.direction))
-        case _ =>
-          println(s"Unknown instruction: $instruction")
-          state
-      }
-    }
-
-    mower.instructions.foldLeft(MowerState(mower.start, mower.direction))(
-      executeInstruction
-    )
-  }
 
   def saveToJson(
       lawnLimit: LawnLimit,
@@ -144,34 +113,19 @@ def Main(): Unit = {
     """
   }
 
-  def saveToCsv(
-      lawnLimit: LawnLimit,
-      mowers: List[Mower],
-      finalStates: List[MowerState]
-  ): String = {
-    val header =
-      "numéro;début_x;début_y;début_direction;fin_x;fin_y;fin_direction;instructions\n"
-    val csvContent = mowers
-      .zip(finalStates)
-      .zipWithIndex
-      .map { case ((mower, state), index) =>
-        s"${index + 1};${mower.start.x};${mower.start.y};${mower.direction};${state.position.x};${state.position.y};${state.direction};${mower.instructions.mkString}"
-      }
-      .mkString("\n")
-    header + csvContent
-  }
-
   val config = ConfigReader.readConfig()
 
-  val inputData = InputHandler.readFile(config.inputPath) match {
-    case Success(data) => data
-    case Failure(_) =>
-      println("Error reading input file")
-      sys.exit(1)
-  }
+  val lawnLimit = LawnLimit(5, 5)
+  val mowers = List(
+    Mower(Point(1, 2), 'N', List('G', 'A', 'G', 'A', 'G', 'A', 'G', 'A', 'A')),
+    Mower(
+      Point(3, 3),
+      'E',
+      List('A', 'A', 'D', 'A', 'A', 'D', 'A', 'D', 'D', 'A')
+    )
+  )
 
-  val finalStates =
-    inputData.mowers.map(processInstructions(_, inputData.lawnLimit))
+  val finalStates = mowers.map(Instruction.processInstructions(_, lawnLimit))
 
   finalStates.foreach { state =>
     println(
@@ -179,21 +133,15 @@ def Main(): Unit = {
     )
   }
 
-  val json = saveToJson(inputData.lawnLimit, inputData.mowers, finalStates)
+  val json = saveToJson(lawnLimit, mowers, finalStates)
   val jsonFileWriter = new FileWriter(new File(config.jsonPath))
   jsonFileWriter.write(json)
   jsonFileWriter.close()
   println(s"JSON output written to ${config.jsonPath}")
 
-  val yaml = saveToYaml(inputData.lawnLimit, inputData.mowers, finalStates)
+  val yaml = saveToYaml(lawnLimit, mowers, finalStates)
   val yamlFileWriter = new FileWriter(new File(config.yamlPath))
   yamlFileWriter.write(yaml)
   yamlFileWriter.close()
   println(s"YAML output written to ${config.yamlPath}")
-
-  val csv = saveToCsv(inputData.lawnLimit, inputData.mowers, finalStates)
-  val csvFileWriter = new FileWriter(new File(config.csvPath))
-  csvFileWriter.write(csv)
-  csvFileWriter.close()
-  println(s"CSV output written to ${config.csvPath}")
 }
