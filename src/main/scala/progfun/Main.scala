@@ -1,10 +1,14 @@
 package fr.esgi.al.funprog
 
 import fr.esgi.al.funprog.direction.Direction
-import fr.esgi.al.funprog.models._
-import fr.esgi.al.funprog.utils.ConfigReader
+import fr.esgi.al.funprog.models.*
+import utils.{ConfigReader, InputHandler}
+
 import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
 import java.io.{File, FileWriter}
+
+import fr.esgi.al.funprog.utils._
 
 @main
 def Main(): Unit = {
@@ -159,17 +163,15 @@ def Main(): Unit = {
 
   val config = ConfigReader.readConfig()
 
-  val lawnLimit = LawnLimit(5, 5)
-  val mowers = List(
-    Mower(Point(1, 2), 'N', List('G', 'A', 'G', 'A', 'G', 'A', 'G', 'A', 'A')),
-    Mower(
-      Point(3, 3),
-      'E',
-      List('A', 'A', 'D', 'A', 'A', 'D', 'A', 'D', 'D', 'A')
-    )
-  )
+  val inputData = InputHandler.readFile(config.inputPath) match {
+    case Success(data) => data
+    case Failure(_) =>
+      println("Error reading input file")
+      sys.exit(1)
+  }
 
-  val finalStates = mowers.map(processInstructions(_, lawnLimit))
+  val finalStates =
+    inputData.mowers.map(processInstructions(_, inputData.lawnLimit))
 
   finalStates.foreach { state =>
     println(
@@ -177,19 +179,19 @@ def Main(): Unit = {
     )
   }
 
-  val json = saveToJson(lawnLimit, mowers, finalStates)
+  val json = saveToJson(inputData.lawnLimit, inputData.mowers, finalStates)
   val jsonFileWriter = new FileWriter(new File(config.jsonPath))
   jsonFileWriter.write(json)
   jsonFileWriter.close()
   println(s"JSON output written to ${config.jsonPath}")
 
-  val yaml = saveToYaml(lawnLimit, mowers, finalStates)
+  val yaml = saveToYaml(inputData.lawnLimit, inputData.mowers, finalStates)
   val yamlFileWriter = new FileWriter(new File(config.yamlPath))
   yamlFileWriter.write(yaml)
   yamlFileWriter.close()
   println(s"YAML output written to ${config.yamlPath}")
 
-  val csv = saveToCsv(lawnLimit, mowers, finalStates)
+  val csv = saveToCsv(inputData.lawnLimit, inputData.mowers, finalStates)
   val csvFileWriter = new FileWriter(new File(config.csvPath))
   csvFileWriter.write(csv)
   csvFileWriter.close()
